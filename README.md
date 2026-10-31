@@ -1,4 +1,4 @@
-# Giffy iOS — 첫 화면 구현 (0.1)
+# Giffy iOS — 웹 디자인 적용 (0.2)
 
 SwiftUI / iOS 17 이상 / Xcode 16 이상. 외부 패키지 없이 열 수 있는 iPhone 프로젝트입니다.
 
@@ -8,17 +8,24 @@ SwiftUI / iOS 17 이상 / Xcode 16 이상. 외부 패키지 없이 열 수 있�
 3. 상단 실행 대상으로 iPhone 시뮬레이터를 선택하고 실행(▶)합니다.
 4. 실제 iPhone 실행 시 Signing & Capabilities에서 본인 개발 팀과 고유 Bundle Identifier를 설정합니다.
 
-Xcode 27.2에서 iPhone 18 Pro 대상으로 빌드가 통과했습니다. 명령 실행 환경에서는 Swift 매크로와 시뮬레이터 접근이 제한되어 Xcode 앱에서 직접 빌드했습니다. 시뮬레이터 첫 부팅 및 화면 점검은 진행 중입니다. project.pbxproj의 plist 문법 검사도 통과했습니다. 앱 아이콘, 배포용 서명 및 App Store 메타데이터는 아직 없습니다.
+Xcode 27.2에서 iPhone 18 Pro 대상으로 빌드가 통과했습니다. 명령 실행 환경에서는 Swift 매크로와 시뮬레이터 접근이 제한되어 Xcode 앱에서 직접 빌드했습니다. 시뮬레이터에서 홈과 상품 상세 화면 표시를 확인했습니다. project.pbxproj의 plist 문법 검사도 통과했습니다. 앱 아이콘, 배포용 서명 및 App Store 메타데이터는 아직 없습니다.
 
-## 구현된 화면
-- Explore: Giffy 보라색·크림색, 지역 선택, 카테고리 필터, 상품 카드.
-- Search: 상품명·매장·지역 검색, 카테고리와 조합, 결과 없음 안내.
-- 상품 상세 → From 이름·메시지 작성 → 로그인 안내 시트.
-- From 필수/50자 이내, 메시지 선택/200자 이내. 초과 입력은 유지하되 진행 불가.
-- My Gifts 비로그인 안내. Apple·Google 버튼은 미연결 안내만 표시.
-- 기존 /gift?code= 형식의 HTTPS URL 파서. 앱에 URL이 전달되면 수령 화면 안내를 표시. 실제 Universal Link 설정과 서버 조회는 미구현.
+## Web design update (0.2)
+- Bundled original logo, four hero photos, three area photos, product and detail images. No placeholder artwork.
+- Inter body and Fraunces hero typography; #6C63FF purchase buttons, #D96A46 hero buttons, #F9F9F9 backgrounds, #111111 text.
+- Matching mobile home section order, three-column product cards, area navigation, search and category filtering.
+- Product details follow the web mobile hierarchy: title/price/validity, photo, vendor, From/message, purchase button.
+- Three public catalogue records are bundled snapshots, not live inventory. Authentication, payments, issuing, sharing and notifications are not connected yet.
+- iOS Apple sign-in option retained; Google modal typography, brand mark and legal links follow the web.
+- Asset sources and font licenses included; see ASSET-SOURCES.md.
 
-가격과 상품명은 공개 웹에서 확인한 3개 상품을 샘플로 사용합니다. 설명·지역 배치는 화면 검토용이며 실제 판매 정보가 아닙니다. 이미지는 SF Symbols 임시 그래픽입니다. 실제 로그인, 결제, 주문 생성, 바우처 발급, QR 표시, 공유, 푸시는 아직 연결되지 않았습니다. 샘플 모드는 앱에 명시되어 있으며 가짜 결제 성공이나 발급 결과를 만들지 않습니다.
+## Fixes and verification
+- Navigation destinations moved out of the conditional lazy product grid to a stable NavigationStack root, including empty filter results.
+- Xcode recommended settings applied: active architecture for Debug, compiler warnings, testability, weak references, script isolation.
+- Carousel avoids overlapping implicit animations, stops in the background, and respects Reduce Motion and pause controls.
+- Xcode 27.2 build/run on iPhone 18 Pro simulator; home and product detail visually confirmed.
+- Tests/ModelChecks.swift validates catalogue decoding, image resources, untrusted gift links and Unicode message limits.
+- CA Event launch measurement, Core Animation decomposition and gesture-gate messages were observed as simulator diagnostics. Logging is not suppressed; real-device testing remains necessary.
 
 ## 다음 구현 순서
 1. 기존 Base44 인증에서 네이티브 Apple·Google 계정 연결 지원 여부 확인. 이메일만으로 계정을 자동 병합하지 않고 제공자 식별자와 Giffy 계정을 검증해 연결. 계정 삭제 기능 포함.

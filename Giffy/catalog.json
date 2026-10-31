@@ -1,0 +1,41 @@
+[
+  {
+    "id": "6a956c4f9ef5b8843696b5b5",
+    "name": "Cinnamon Brioche Knot Box",
+    "description": "A box of six laminated brioche knots brushed with cinnamon sugar glaze. Rich, pillowy, and fragrant — the ultimate comfort bake.",
+    "vendor_name": "Cafe Hachu",
+    "vendor_address": "41 Tang Lung Street, Causeway Bay",
+    "price": 95.0,
+    "category": "Bakery",
+    "district": "Central",
+    "validity_days": 365.0,
+    "asset": "product0",
+    "detail_asset": "detail0"
+  },
+  {
+    "id": "6a956c4f9ef5b8843696b5b2",
+    "name": "Cold Brew Tasting Flight",
+    "description": "A curated tasting flight of three house-made cold brews — classic, nitro, and a seasonal infused variation. A refreshing experience for hot Hong Kong afternoons.",
+    "vendor_name": "donut heaven",
+    "vendor_address": "42 le tung avenue",
+    "price": 120.0,
+    "category": "Coffee",
+    "district": "Wan Chai",
+    "validity_days": 365.0,
+    "asset": "product1",
+    "detail_asset": "detail1"
+  },
+  {
+    "id": "6a956c4f9ef5b8843696b5b0",
+    "name": "Single Origin Pour-Over Voucher",
+    "description": "A hand-brewed single origin pour-over coffee voucher redeemable at participating specialty cafés across Hong Kong. Perfect for the coffee connoisseur who appreciates nuanced flavour profiles.",
+    "vendor_name": "I love tea",
+    "vendor_address": "19 toronot canda is good",
+    "price": 85.0,
+    "category": "Coffee",
+    "district": "Tsim Sha Tsui",
+    "validity_days": 365.0,
+    "asset": "product2",
+    "detail_asset": "detail2"
+  }
+]
