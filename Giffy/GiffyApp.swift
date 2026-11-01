@@ -3,6 +3,7 @@ import CoreText
 
 @main
 struct GiffyApp: App {
+    @StateObject private var auth = AuthStore()
     init() {
         for name in ["inter", "fraunces"] {
             if let url = Bundle.main.url(forResource: name, withExtension: "ttf") {
@@ -12,7 +13,7 @@ struct GiffyApp: App {
     }
     var body: some Scene {
         WindowGroup {
-            RootView().font(Brand.body(14)).foregroundStyle(Brand.ink)
+            RootView().environmentObject(auth).task { await auth.restore() }.font(Brand.body(14)).foregroundStyle(Brand.ink)
                 .tint(Brand.purple).preferredColorScheme(.light)
         }
     }

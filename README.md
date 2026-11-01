@@ -15,8 +15,8 @@ Xcode 27.2에서 iPhone 18 Pro 대상으로 빌드가 통과했습니다. 명령
 - Inter body and Fraunces hero typography; #6C63FF purchase buttons, #D96A46 hero buttons, #F9F9F9 backgrounds, #111111 text.
 - Matching mobile home section order, three-column product cards, area navigation, search and category filtering.
 - Product details follow the web mobile hierarchy: title/price/validity, photo, vendor, From/message, purchase button.
-- Three public catalogue records are bundled snapshots, not live inventory. Authentication, payments, issuing, sharing and notifications are not connected yet.
-- iOS Apple sign-in option retained; Google modal typography, brand mark and legal links follow the web.
+- Three public catalogue records are bundled snapshots, not live inventory. Google/Apple hosted authentication is implemented; live account testing is pending. Payments, issuing, sharing and notifications are not connected yet.
+- Google and Apple buttons open system authentication sessions. Modal typography, brand mark and legal links follow the web. See AUTHENTICATION.md for callback requirements and verification status.
 - Asset sources and font licenses included; see ASSET-SOURCES.md.
 
 ## Fixes and verification

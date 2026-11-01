@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ProductDetailView: View {
+    @EnvironmentObject private var auth: AuthStore
+    @State private var checkoutNotice = false
     let product: Product
     @State private var draft = GiftDraft()
     @State private var signIn = false
@@ -31,10 +33,10 @@ struct ProductDetailView: View {
                         .onChange(of: draft.message) { _, value in draft.message = String(value.prefix(200)) }
                     Text("\(draft.message.count)/200").font(Brand.body(12)).foregroundStyle(Brand.muted).frame(maxWidth: .infinity, alignment: .trailing)
                 }
-                Button("Sign in to purchase") {
+                Button(auth.user == nil ? "Sign in to purchase" : "Purchase Gift — " + product.priceLabel) {
                     guard draft.valid else { senderError = true; return }
                     focused = false
-                    signIn = true
+                    if auth.user == nil { signIn = true } else { checkoutNotice = true }
                 }.buttonStyle(GiffyButtonStyle())
                 Text(product.description).foregroundStyle(Brand.muted).lineSpacing(5).padding(.vertical, 16)
                 if let asset = product.detailAsset { Image(asset).resizable().scaledToFit().frame(maxWidth: .infinity).clipShape(RoundedRectangle(cornerRadius: 16)) }
@@ -43,24 +45,29 @@ struct ProductDetailView: View {
         }.background(.white).scrollDismissesKeyboard(.interactively)
             .navigationTitle("Gift details").navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $signIn) { SignInView() }
+            .alert("Checkout is not connected yet", isPresented: $checkoutNotice) { Button("OK", role: .cancel) {} } message: { Text("Your account is signed in. No payment has been created or charged.") }
     }
 }
 
 struct SignInView: View {
+    @EnvironmentObject private var auth: AuthStore
     @Environment(\.dismiss) private var dismiss
-    @State private var explanation = false
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            HStack { Text("Sign in to Giffy").font(Brand.serif(24)); Spacer(); Button { dismiss() } label: { Image(systemName: "xmark").foregroundStyle(Brand.muted) }.accessibilityLabel("Close") }
-            Button { explanation = true } label: {
+            HStack { Text("Sign in to Giffy").font(Brand.serif(24)); Spacer(); Button { auth.cancel(); dismiss() } label: { Image(systemName: "xmark").foregroundStyle(Brand.muted) }.accessibilityLabel("Close") }
+            Button { auth.signIn(.google) } label: {
                 HStack(spacing: 10) { GoogleMark().frame(width: 20, height: 20); Text("Continue with Google").font(Brand.body(14, .medium)) }.frame(maxWidth: .infinity).frame(height: 48).overlay(RoundedRectangle(cornerRadius: 12).stroke(Brand.border))
-            }.buttonStyle(.plain)
-            Button { explanation = true } label: { Label("Continue with Apple", systemImage: "apple.logo").font(Brand.body(14, .medium)).frame(maxWidth: .infinity).frame(height: 48).background(.black, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(.white) }.buttonStyle(.plain)
+            }.buttonStyle(.plain).disabled(auth.busy || auth.restoring)
+            Button { auth.signIn(.apple) } label: { Label("Continue with Apple", systemImage: "apple.logo").font(Brand.body(14, .medium)).frame(maxWidth: .infinity).frame(height: 48).background(.black, in: RoundedRectangle(cornerRadius: 12)).foregroundStyle(.white) }.buttonStyle(.plain).disabled(auth.busy || auth.restoring)
             Text("Giffy will receive your name and email to create your account and manage your purchases.").font(Brand.body(12)).foregroundStyle(Color(hex: 0x78716C)).multilineTextAlignment(.center)
             HStack(spacing: 12) { Link("Terms of Service", destination: URL(string: "https://giffy-copy-85814e59.base44.app/terms")!); Link("Privacy Policy", destination: URL(string: "https://giffy-copy-85814e59.base44.app/privacy")!) }.font(Brand.body(12)).foregroundStyle(Brand.ink).frame(maxWidth: .infinity)
-            Text("Preview: sign-in is not connected yet.").font(Brand.body(11)).foregroundStyle(Brand.muted).frame(maxWidth: .infinity)
+            if auth.busy || auth.restoring { ProgressView("Signing in…") }
+            if let message = auth.errorMessage { Text(message).font(Brand.body(12)).foregroundStyle(.red).accessibilityLabel(message) }
         }.font(Brand.body(14)).foregroundStyle(Brand.ink).padding(28).presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
-            .alert("Sign-in is being prepared", isPresented: $explanation) { Button("OK", role: .cancel) {} } message: { Text("This preview does not create accounts or charge you. Provider configuration and secure Giffy account linking are still required.") }
+            .interactiveDismissDisabled(auth.busy)
+            .onChange(of: auth.user?.id) { _, userID in if userID != nil { dismiss() } }
+            .onDisappear { auth.cancel() }
+
     }
 }
 

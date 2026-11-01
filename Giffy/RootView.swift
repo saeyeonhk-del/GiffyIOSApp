@@ -10,7 +10,10 @@ struct RootView: View {
                 // inside a conditional lazy grid disappeared when filters became empty.
                 .navigationDestination(for: Product.self) { ProductDetailView(product: $0) }
         }
-        .onOpenURL { validLink = GiftRoute.code(from: $0) != nil; incoming = true }
+        .onOpenURL { url in
+            guard url.scheme != AuthConfiguration.callbackScheme else { return }
+            validLink = GiftRoute.code(from: url) != nil; incoming = true
+        }
         .sheet(isPresented: $incoming) {
             NavigationStack {
                 ContentUnavailableView(validLink ? "Your gift" : "Invalid gift link", systemImage: "gift", description: Text(validLink ? "Secure gift lookup is not connected in this preview." : "Please check the link with the sender."))
@@ -21,6 +24,7 @@ struct RootView: View {
 }
 
 struct ExploreView: View {
+    @EnvironmentObject private var auth: AuthStore
     @State private var showSignIn = false
     @State private var query = ""
     var body: some View {
@@ -65,7 +69,7 @@ struct ExploreView: View {
                     ToolbarItem(placement: .topBarLeading) { Image("logo").resizable().scaledToFit().frame(width: 82, height: 36).accessibilityLabel("Giffy") }
                     ToolbarItemGroup(placement: .topBarTrailing) {
                         NavigationLink { SearchView() } label: { Image(systemName: "magnifyingglass").foregroundStyle(Brand.muted) }.accessibilityLabel("Search")
-                        Button("Sign in") { showSignIn = true }.font(Brand.body(12, .medium)).foregroundStyle(.white).padding(.horizontal, 14).padding(.vertical, 9).background(Brand.ink, in: RoundedRectangle(cornerRadius: 8))
+                        Button(auth.user == nil ? "Sign in" : "My Gifts") { showSignIn = true }.font(Brand.body(12, .medium)).foregroundStyle(.white).padding(.horizontal, 14).padding(.vertical, 9).background(Brand.ink, in: RoundedRectangle(cornerRadius: 8))
                         Menu {
                             NavigationLink("All Gifts") { SearchView() }
                             ForEach(Area.all) { area in NavigationLink(area.name) { SearchView(area: area.name) } }
@@ -75,7 +79,7 @@ struct ExploreView: View {
                 }
                 .toolbarBackground(.white, for: .navigationBar).toolbarBackground(.visible, for: .navigationBar)
                 .navigationBarTitleDisplayMode(.inline)
-                .sheet(isPresented: $showSignIn) { SignInView() }
+                .sheet(isPresented: $showSignIn) { if auth.user == nil { SignInView() } else { NavigationStack { MyGiftsView() } } }
         }
     }
 }
@@ -180,14 +184,49 @@ struct GiffyFooter: View {
     }
 }
 struct MyGiftsView: View {
+    @EnvironmentObject private var auth: AuthStore
     @State private var signIn = false
+    @State private var gifts: [PurchasedGift] = []
+    @State private var loading = false
+    @State private var error: String?
     var body: some View {
-        VStack(spacing: 24) {
-            Text("My Gifts").font(Brand.body(28, .bold))
-            Text("Please sign in to view your gifts.").foregroundStyle(Brand.muted)
-            Button("Sign in") { signIn = true }.buttonStyle(GiffyButtonStyle())
-            PreviewNotice()
-        }.padding(24).sheet(isPresented: $signIn) { SignInView() }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text("My Gifts").font(Brand.body(28, .bold))
+                if auth.restoring { ProgressView("Restoring your session…") }
+                else if let user = auth.user {
+                    Text(user.email).foregroundStyle(Brand.muted)
+                    if loading { ProgressView("Loading your gifts…") }
+                    else if let error { Text(error).foregroundStyle(.red); Button("Retry") { Task { await load() } } }
+                    else if gifts.isEmpty { Text("No purchases yet.").foregroundStyle(Brand.muted) }
+                    else { ForEach(gifts) { gift in
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(gift.product_name ?? "Gift voucher").font(Brand.body(16, .semibold))
+                            Text(gift.vendor_name ?? "").foregroundStyle(Brand.muted)
+                            Text(gift.status ?? "Status unavailable").font(Brand.body(12))
+                            if let code = gift.gift_code, !code.isEmpty {
+                                let url = AuthConfiguration.baseURL.appendingPathComponent("gift").appending(queryItems: [.init(name: "code", value: code)])
+                                Link("View voucher", destination: url)
+                            }
+                        }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Brand.background, in: RoundedRectangle(cornerRadius: 16))
+                    } }
+                    Button("Sign out") { gifts = []; auth.signOut() }.foregroundStyle(.red)
+                } else {
+                    Text("Please sign in to view your gifts.").foregroundStyle(Brand.muted)
+                    if let message = auth.errorMessage { Text(message).font(Brand.body(12)).foregroundStyle(.red) }
+                    Button("Sign in") { signIn = true }.buttonStyle(GiffyButtonStyle())
+                }
+            }.padding(24)
+        }.sheet(isPresented: $signIn) { SignInView() }
+            .task(id: auth.user?.id) { gifts = []; if auth.user != nil { await load() } }
+            .refreshable { if auth.user != nil { await load() } }
+    }
+    private func load() async {
+        loading = true; error = nil
+        defer { loading = false }
+        do { gifts = try await auth.myGifts() }
+        catch is CancellationError { }
+        catch { self.error = (error as? AuthFailure)?.errorDescription ?? "Your gifts could not be loaded. Please retry." }
     }
 }
 struct PreviewNotice: View {
