@@ -24,3 +24,6 @@ From the repository root:
 
     swiftc Giffy/AuthConfiguration.swift Tests/AuthChecks.swift -o /tmp/giffy-auth-checks
     /tmp/giffy-auth-checks
+
+## Hosted return fix
+Base44 rejected custom-scheme from_url values after provider login. The app now returns to the Giffy HTTPS /native-auth page, which removes URL credentials before loading further modules and transfers them to the fixed native callback fragment. Existing web entry code is preserved byte-for-byte for all other paths. The web change must be published in Base44. Real provider authentication and return to app still require an owner sign-in test.

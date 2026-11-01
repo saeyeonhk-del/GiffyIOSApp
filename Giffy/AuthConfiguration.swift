@@ -7,8 +7,7 @@ enum AuthConfiguration {
     enum Provider: String { case google, apple }
     static func loginURL(provider: Provider, state: String) -> URL {
         var callback = URLComponents()
-        callback.scheme = callbackScheme
-        callback.host = "callback"
+        callback = URLComponents(url: baseURL.appendingPathComponent("native-auth"), resolvingAgainstBaseURL: false)!
         callback.queryItems = [URLQueryItem(name: "state", value: state)]
         // Same endpoint and parameters as Base44's official loginWithProvider SDK.
         let path = provider == .google ? "/api/apps/auth/login" : "/api/apps/auth/apple/login"
